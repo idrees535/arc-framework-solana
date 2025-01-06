@@ -45,7 +45,6 @@ anchor --version
 4. **Build the Program**:
    Compile the LMSR program:
    ```bash
-   cd anchor
    anchor build
    ```
 
@@ -59,13 +58,13 @@ anchor --version
    Update the `Anchor.toml` and `lib.rs` files with the deployed program ID:
    ```bash
    # Replace <PROGRAM_ID> with the actual deployed ID
-   solana address -k target/deploy/lmsr-anchor-keypair.json
+   solana address -k target/deploy/prediction_market-keypair.json
    ```
 
    Update `Anchor.toml`:
    ```toml
    [programs.devnet]
-   lmsr_anchor = "<PROGRAM_ID>"
+   prediction_market = "<PROGRAM_ID>"
    ```
 
    Update `lib.rs`:
@@ -81,7 +80,7 @@ anchor --version
 
 ## Project Structure
 
-- `programs/lmsr/src`: Contains the LMSR program logic.
+- `programs/prediction_market/src`: Contains the LMSR program logic.
 - `tests`: Integration tests for LMSR functionality.
 - `Anchor.toml`: Anchor configuration file.
 - `migrations/deploy.ts`: Script for program deployment.
