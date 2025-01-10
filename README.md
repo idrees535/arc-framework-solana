@@ -32,6 +32,7 @@ anchor --version
    Navigate to the project directory and install dependencies.
    ```bash
    yarn install
+   npm install
    ```
 
 3. **Configure Solana CLI**:
@@ -75,7 +76,7 @@ anchor --version
 7. **Run Tests**:
    Execute the provided tests to ensure functionality:
    ```bash
-   anchor test
+   anchor test --skip-local-validator --skip-deploy
    ```
 
 ## Project Structure

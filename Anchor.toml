@@ -6,17 +6,21 @@ resolution = true
 skip-lint = false
 
 [programs.devnet]
-prediction_market = "Eb62RueWxhrNGGPgcFbFuCjWZJnWaL2RPKt5z79Xbvmc"
+prediction_market = "JDaQW4FeGSkt1QRcMfjoT2JxUR9WLD2Vg15Mx2yVWCwg"
+
+[programs.localnet]
+prediction_market = "JDaQW4FeGSkt1QRcMfjoT2JxUR9WLD2Vg15Mx2yVWCwg"
+
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "http://127.0.0.1:8899"
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "../node_modules/.bin/jest --preset ts-jest"
+test = "node_modules/.bin/jest --preset ts-jest"
 
 [test]
 startup_wait = 5000
