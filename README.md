@@ -31,16 +31,26 @@ anchor --version
 2. **Install Dependencies**:
    Navigate to the project directory and install dependencies.
    ```bash
-   yarn install
    npm install
    ```
 
 3. **Configure Solana CLI**:
    Set up your Solana CLI environment:
    ```bash
-   solana config set --url devnet
-   solana-keygen new --outfile ~/.config/solana/id.json
-   solana airdrop 2
+   solana config set --url localhost
+   # or for devnet
+   solana config set --url https://api.devnet.solana.com
+
+   solana config get
+
+   solana-keygen new --outfile ~/.config/solana/id.json --force
+   ```
+   If running locally, start a Solana validator:
+
+   ```bash
+   solana-test-validator
+   solana airdrop 10
+
    ```
 
 4. **Build the Program**:
