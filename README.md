@@ -85,15 +85,6 @@ anchor --version
 - `Anchor.toml`: Anchor configuration file.
 - `migrations/deploy.ts`: Script for program deployment.
 
-## LMSR Program Features
-
-1. **Dynamic Pricing**: Implements the LMSR cost function to calculate dynamic share prices.
-2. **Liquidity Management**: Ensures inherent liquidity via the `b` parameter.
-3. **Worst-Case Loss Coverage**: Calculates maximum potential loss to ensure market stability.
-4. **Share Trading**: Facilitates dynamic share buying and selling based on LMSR odds.
-5. **Oracle Integration**: Supports modular oracles for event outcome verification.
-
-
 
 ## Contributing
 

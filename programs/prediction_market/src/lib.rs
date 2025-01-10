@@ -10,7 +10,7 @@ pub mod utils;
 
 pub use crate::instructions::*;
 
-declare_id!("4YchBfppyQpGjCeZ65rFSmktEbV9ib93AGQxWjn1u9bW");
+declare_id!("Eb62RueWxhrNGGPgcFbFuCjWZJnWaL2RPKt5z79Xbvmc");
 
 #[program]
 pub mod prediction_market {
