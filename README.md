@@ -1,9 +1,7 @@
-
-# ARC Farmework Solana Implementation
-### Medium Article 
+# ARC Framework Thesis
 https://medium.com/@idrees535/adaptive-risk-coverage-arc-framework-a-dynamic-approach-of-next-order-value-aggregation-and-f2ec5cc58a77
 
-
+# ARC Farmework Solana Implementation
 This repository contains the implementation of the **Logarithmic Market Scoring Rule (LMSR)** programs, designed to provide dynamic pricing, inherent liquidity, and risk management for decentralized coverage pools.
 
 ## Prerequisites
