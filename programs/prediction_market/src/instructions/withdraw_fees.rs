@@ -34,6 +34,8 @@ pub fn handler(
         "Transferred {} tokens from market to fee recipients's token  account",
         fees
     );
+
+    market.collected_fees = 0;
     
     // Emit event
     msg!("Fees Withdrawn: {} tokens to fee recipient", fees);

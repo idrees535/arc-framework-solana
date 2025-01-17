@@ -49,20 +49,36 @@ pub fn calculate_fee(cost: u64, fee_percent: u64) -> Result<u64> {
         .ok_or(CustomError::Overflow)?;
     Ok(fee)
 }
-// pub fn calculate_required_initial_funds(b: u64, num_outcomes: usize) -> Result<u64, &'static str> {
-//     if num_outcomes == 0 {
-//         return 0; //msg!("Number of outcomes must be greater than 0");
-//     }
+pub fn calculate_required_initial_funds(b: u64, num_outcomes: usize) -> Result<u64> {
+    use std::f64;
 
-//     let b_float = b as f64;
-//     let n_float = num_outcomes as f64;
+    // Handle edge cases
+    if num_outcomes == 0 {
+        return Err(error!(CustomError::InvalidInput)); // No outcomes means invalid input
+    }
 
-//     let required_funds = b_float * n_float.ln();
+    // Convert inputs to floating-point for calculations
+    let b_f64 = b as f64;
+    let n_f64 = num_outcomes as f64;
 
-//     // Safely cast the result back to `u64` if valid
-//     if required_funds.is_finite() && required_funds > 0.0 {
-//         Ok(required_funds.ceil() as u64) // Round up to ensure adequacy
-//     } else {
-//         CustomError//Err("Invalid calculation for initial funds")
-//     }
-// }
+    // Ensure b is greater than 0
+    if b_f64 <= 0.0 {
+        return Err(error!(CustomError::InvalidLiquidityParameter)); // b must be positive
+    }
+
+    // Calculate the required initial funds
+    let required_funds = b_f64 * n_f64.ln(); // b * ln(num_outcomes)
+
+    // Scale the result to match the precision of TOKEN_DECIMALS
+    let scale_factor = 10u64.pow(TOKEN_DECIMALS as u32) as f64;
+    let scaled_funds = required_funds * scale_factor;
+
+    // Ensure the result is finite and positive
+    if !scaled_funds.is_finite() || scaled_funds <= 0.0 {
+        return Err(error!(CustomError::MathError)); // Invalid calculation
+    }
+
+    // Convert the result back to u64, rounding up to ensure adequacy
+    Ok(scaled_funds.ceil() as u64)
+}
+

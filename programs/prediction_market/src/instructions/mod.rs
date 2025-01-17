@@ -6,6 +6,7 @@ pub mod close_market;
 pub mod set_outcome;
 pub mod claim_payout;
 pub mod withdraw_fees;
+pub mod withdraw_remaining_funds;
 
 pub use create_market::CreateMarket;
 pub use create_market::*;
@@ -21,4 +22,7 @@ pub use claim_payout::ClaimPayout;
 pub use claim_payout::*;
 pub use withdraw_fees::WithdrawFees;
 pub use withdraw_fees::*;
+pub use withdraw_remaining_funds::*;
+pub use withdraw_remaining_funds::WithdrawRemainingFunds;
+
 

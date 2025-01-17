@@ -58,9 +58,11 @@ pub fn handler(ctx: Context<SellShares>, outcome_index: u64, num_shares: u64) ->
     // Calculate fee
     let fee_amount: u64 = calculate_fee(refund_amount, market.fee_percent)?;
     let reinvest_amount: u64 = fee_amount.checked_div(2).ok_or(CustomError::Overflow)?;
+    
     let fee_recipient_amount: u64 = fee_amount
         .checked_sub(reinvest_amount)
         .ok_or(CustomError::Overflow)?;
+
     let net_refund: u64 = refund_amount
         .checked_sub(fee_amount)
         .ok_or(CustomError::Overflow)?;
@@ -114,6 +116,17 @@ pub fn handler(ctx: Context<SellShares>, outcome_index: u64, num_shares: u64) ->
         .market_maker_funds
         .checked_sub(refund_amount)
         .ok_or(CustomError::Overflow)?;
+    
+    market.market_maker_funds = market
+        .market_maker_funds
+        .checked_add(reinvest_amount)
+        .ok_or(CustomError::Overflow)?;
+
+    market.collected_fees = market
+        .collected_fees
+        .checked_add(fee_recipient_amount)
+        .ok_or(CustomError::Overflow)?;
+
 
     // Emit event
     msg!(

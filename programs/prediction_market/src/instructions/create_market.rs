@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
-use anchor_spl::token::{self, spl_token,InitializeMint, Token, TokenAccount, Transfer};
 use anchor_spl::associated_token::AssociatedToken;
+use anchor_spl::token::{self, spl_token, InitializeMint, Token, TokenAccount, Transfer};
 
 //use anchor_spl::token_interface::Mint;
 use crate::constants::SHARES_DECIMALS;
@@ -10,6 +10,8 @@ use crate::state::market::Market;
 use crate::state::outcome::Outcome;
 use anchor_spl::token::Mint;
 use solana_program::program_pack::Pack;
+
+use crate::utils::calculate_required_initial_funds;
 
 pub fn handler<'info>(
     ctx: Context<'_, '_, '_, 'info, CreateMarket<'info>>,
@@ -39,6 +41,18 @@ pub fn handler<'info>(
     let mint = spl_token::state::Mint::unpack(&base_token_mint_info.data.borrow())?;
     msg!("Mint supply: {}", mint.supply);
     msg!("Market Base Token Mint: {}", market.base_token_mint);
+
+    let required_initial_funds = calculate_required_initial_funds(b, outcomes.len())?;
+    require!(
+        initial_funds >= required_initial_funds,
+        CustomError::InsufficientInitialFunds
+    );
+
+    msg!(
+        "Required Initial Funds: {}, Provided Initial Funds: {}",
+        required_initial_funds,
+        initial_funds
+    );
 
     let bump = ctx.bumps.market;
     market.bump = bump;
@@ -74,9 +88,12 @@ pub fn handler<'info>(
             CustomError::InvalidMint
         );
 
+        // Validate that the freeze authority is None
+
         // Check if the mint account is already initialized
         if spl_token::state::Mint::unpack(&outcome_mint.data.borrow()).is_ok() {
             msg!("Outcome Mint already initialized: {}", outcome_mint.key());
+
             // should we allow an already initialized mint? Don't think so
             // require!(
             //     spl_token::state::Mint::unpack(&outcome_mint.data.borrow()).is_err(),
@@ -97,18 +114,21 @@ pub fn handler<'info>(
                         rent: ctx.accounts.rent.to_account_info(),
                     },
                 ),
-                SHARES_DECIMALS.try_into().unwrap(), 
+                SHARES_DECIMALS.try_into().unwrap(),
                 &market.to_account_info().key(),
                 None, // Freeze authority
             )?;
-            // Print the mint authority after initialization
-        //let mint_state = spl_token::state::Mint::unpack(&outcome_mint.data.borrow())?;
-        // msg!(
-        //     "Outcome Mint Initialized: {} with Mint Authority: {}",
-        //     outcome_mint.key(),
-        //     mint_state.mint_authority.unwrap()
-        // );
         }
+
+        let mint_state = spl_token::state::Mint::unpack(&outcome_mint.data.borrow())?;
+        require!(
+            mint_state.freeze_authority.is_none(),
+            CustomError::FreezeAuthorityNotDisabled
+        );
+        msg!(
+            "Outcome Mint {} has no freeze authority, validation passed.",
+            outcome_mint.key()
+        );
 
         // Add the outcome to the market
         market.outcomes.push(Outcome {
@@ -127,7 +147,10 @@ pub fn handler<'info>(
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
     token::transfer(cpi_ctx, initial_funds)?;
 
-    msg!("Transferred {} initial funds to market's token account", initial_funds);
+    msg!(
+        "Transferred {} initial funds to market's token account",
+        initial_funds
+    );
 
     Ok(())
 }
@@ -170,6 +193,6 @@ pub struct CreateMarket<'info> {
     pub system_program: Program<'info, System>,
 
     pub token_program: Program<'info, Token>,
-     pub associated_token_program: Program<'info, AssociatedToken>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub rent: Sysvar<'info, Rent>,
 }

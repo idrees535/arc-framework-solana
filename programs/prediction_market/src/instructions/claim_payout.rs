@@ -17,6 +17,18 @@ pub fn handler(
     require!(market.market_settled, CustomError::MarketNotSettled);
     require!(winning_outcome < market.outcomes.len() as u64, CustomError::InvalidOutcome);
 
+    require!(
+    ctx.accounts.outcome_mint.key() == market.outcomes[winning_outcome as usize].mint,
+    CustomError::InvalidOutcomeMint
+);
+
+    require!(
+    ctx.accounts.user_share_account.mint == ctx.accounts.outcome_mint.key(),
+    CustomError::InvalidUserShareAccount);
+    require!(
+    ctx.accounts.user_share_account.owner == ctx.accounts.user.key(),
+    CustomError::InvalidOwner);
+
     let outcome = &mut market.outcomes[winning_outcome as usize];
     let user_shares = user_share_account.amount;
 
@@ -82,10 +94,17 @@ pub struct ClaimPayout<'info> {
     #[account(mut)]
     pub user_token_account: Account<'info, TokenAccount>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        address = market.outcomes[market.winning_outcome as usize].mint
+    )]
     pub outcome_mint: Account<'info, Mint>,
 
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = user_share_account.mint == outcome_mint.key(), // Ensure share account mint matches the outcome mint
+        constraint = user_share_account.owner == user.key()        // Ensure the share account is owned by the user
+    )]
     pub user_share_account: Account<'info, TokenAccount>,
 
     pub user: Signer<'info>,

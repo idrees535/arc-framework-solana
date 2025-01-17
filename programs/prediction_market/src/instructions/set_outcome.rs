@@ -35,7 +35,7 @@ pub struct SetOutcome<'info> {
     pub market: Account<'info, Market>,
     #[account(
         signer, // Ensure this account is signed
-        //address = market.oracle // Ensure this is the oracle account defined in the market
+        address = market.oracle // Ensure this is the oracle account defined in the market
     )] // Ensure the oracle is correct
     pub oracle: Signer<'info>,          // Only the oracle can set the outcome
 }

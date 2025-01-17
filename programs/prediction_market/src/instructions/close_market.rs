@@ -29,7 +29,7 @@ pub struct CloseMarket<'info> {
     
     #[account(
         signer, // Ensure this account is signed
-        //address = market.oracle // Ensure this is the oracle account defined in the market
+        address = market.oracle // Ensure this is the oracle account defined in the market
     )]
     pub oracle: Signer<'info>, // The oracle signs the transaction 
     pub system_program: Program<'info, System>,   

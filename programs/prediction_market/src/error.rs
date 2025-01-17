@@ -57,6 +57,21 @@ pub enum CustomError {
 
     #[msg("Market is not settled yet")]
     MarketNotSettled,
+    #[msg("outcome mint doesn/t match with outcome_index mint address")]
+    InvalidOutcomeMint,
+    #[msg("User share account is invalid")]
+    InvalidUserShareAccount,
+    #[msg("No remaining funds")]
+    NoRemainingFunds,
+    #[msg("No remaining funds")]
+    InvalidInput,
+    #[msg("No remaining funds")]
+    InvalidLiquidityParameter,
+      #[msg("The initial funds provided are insufficient for this market.")]
+    InsufficientInitialFunds,
+ #[msg("Freeze authority for outcome mint is not disabled")]
+    FreezeAuthorityNotDisabled
+
   
 
 }

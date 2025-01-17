@@ -219,7 +219,7 @@ describe("Prediction Market", () => {
         new anchor.BN(3600),            // duration (1 hour)
         new anchor.BN(fee_percent),               // fee_percent
         feeRecipient.publicKey,                 
-        new anchor.BN(694*Math.pow(10,TOKEN_DECIMALS))             // b.ln (n)
+        new anchor.BN(700*Math.pow(10,TOKEN_DECIMALS))             // b.ln (n)
       )
       .accounts(marketAccounts)
       .remainingAccounts(remainingAccounts)
@@ -442,9 +442,9 @@ describe("Prediction Market", () => {
       .setOutcome(new anchor.BN(winningOutcomeIndex))
       .accounts({
         market: marketPDA,
-        oracle: user.publicKey,
+        oracle: oracle.publicKey,
       })
-      .signers([user])
+      .signers([oracle])
       .rpc();
 
     console.log("Set Outcome Transaction Signature:", setOutcomeTx);
@@ -582,7 +582,32 @@ describe("Prediction Market", () => {
     expect(Number(feeRecipientTokenAccountInfoAfter.amount)).toBe(
       Number(feeRecipientTokenAccountInfoBefore.amount) + feesToWithdraw
     );
+
+    await marketProgram.methods
+      .withdrawRemainingFunds()
+      .accounts(withdrawFeesAccounts)
+      .signers([feeRecipient])
+      .rpc();
+
+    // Fetch updated account states
+    const marketAccountAfterFundsWithdrawal = await marketProgram.account.market.fetch(marketPDA);
+    const marketTokenAccountInfoAfterFundsWithdrawal = await splToken.getAccount(
+      provider.connection,
+      marketTokenAccount
+    );
+    const feeRecipientTokenAccountInfoAfterFundsWithdrawal = await splToken.getAccount(
+      provider.connection,
+      feeRecipientTokenAccount
+    );
+
+    console.log("Market Account After funds Withdrawal:", marketAccountAfterFundsWithdrawal);
+    console.log("Market Token Account After funds Withdrawal:", marketTokenAccountInfoAfterFundsWithdrawal.amount.toString());
+    console.log("Fee Recipient Token Account After funds Withdrawal:", feeRecipientTokenAccountInfoAfterFundsWithdrawal.amount.toString());
+
   });
+
+
+
 
 
 

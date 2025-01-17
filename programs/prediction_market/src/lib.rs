@@ -67,5 +67,8 @@ pub mod prediction_market {
     pub fn withdraw_fees(ctx: Context<WithdrawFees>) -> Result<()> {
         instructions::withdraw_fees::handler(ctx)
     }
+    pub fn withdraw_remaining_funds(ctx: Context<WithdrawRemainingFunds>) -> Result<()> {
+        instructions::withdraw_remaining_funds::handler(ctx)
+    }
 }
 

@@ -4,24 +4,33 @@ use crate::state::market::Market;
 use crate::utils::{calculate_cost, calculate_fee};
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{self, MintTo, Token, TokenAccount, Transfer};
 use anchor_spl::token::Mint;
+use anchor_spl::token::{self, MintTo, Token, TokenAccount, Transfer};
 
 pub fn handler(ctx: Context<BuyShares>, outcome_index: u64, num_shares: u64) -> Result<()> {
     let market = &mut ctx.accounts.market;
 
-   
-
     let outcome_mint = &ctx.accounts.outcome_mint;
-     msg!("outcome_mint.mint_authority: {:?}", outcome_mint.mint_authority.unwrap());
+    msg!(
+        "outcome_mint.mint_authority: {:?}",
+        outcome_mint.mint_authority.unwrap()
+    );
     let buyer_share_account = &ctx.accounts.buyer_share_account;
-     msg!("outcome_mint.mint_authority: {:?}", outcome_mint.mint_authority.unwrap());
-    
+    msg!(
+        "outcome_mint.mint_authority: {:?}",
+        outcome_mint.mint_authority.unwrap()
+    );
+
     require!(
         outcome_mint.mint_authority.unwrap() == market.key(),
         CustomError::InvalidMintAuthority
     );
-  
+
+    require!(
+        market.outcomes[outcome_index as usize].mint == outcome_mint.key(),
+        CustomError::InvalidOutcomeMint
+    );
+
     require!(
         buyer_share_account.mint == outcome_mint.key(),
         CustomError::InvalidMint
@@ -36,7 +45,6 @@ pub fn handler(ctx: Context<BuyShares>, outcome_index: u64, num_shares: u64) -> 
         CustomError::InvalidOutcome
     );
     require!(num_shares > 0, CustomError::InvalidShares);
-
 
     // Calculate cost before purchase
     let q_before: Vec<u64> = market.outcomes.iter().map(|o| o.total_shares).collect();
@@ -65,6 +73,7 @@ pub fn handler(ctx: Context<BuyShares>, outcome_index: u64, num_shares: u64) -> 
     let fee_amount: u64 = calculate_fee(cost, market.fee_percent)?;
     let reinvest_amount: u64 = fee_amount / 2;
     let fee_recipient_amount: u64 = fee_amount - reinvest_amount;
+
     let net_cost: u64 = cost.checked_add(fee_amount).ok_or(CustomError::Overflow)?;
 
     msg!("Fee Amount: {}", fee_amount);
@@ -72,7 +81,6 @@ pub fn handler(ctx: Context<BuyShares>, outcome_index: u64, num_shares: u64) -> 
     msg!("Fee Recipient Amount: {}", fee_recipient_amount);
     msg!("Gross Cost: {}", cost);
     msg!("Total Cost (Cost + Fee): {}", net_cost);
-
 
     // Transfer tokens from buyer to market
     let cpi_accounts = Transfer {
@@ -84,14 +92,18 @@ pub fn handler(ctx: Context<BuyShares>, outcome_index: u64, num_shares: u64) -> 
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
     token::transfer(cpi_ctx, net_cost)?;
 
-    msg!("Transferred amount: {} tokens from buyer account: {} to market account: {}", net_cost, ctx.accounts.buyer_token_account.key(), ctx.accounts.market_token_account.key());
-
+    msg!(
+        "Transferred amount: {} tokens from buyer account: {} to market account: {}",
+        net_cost,
+        ctx.accounts.buyer_token_account.key(),
+        ctx.accounts.market_token_account.key()
+    );
 
     // Mint shares to the user's associated sahre token account
 
     let market_id_bytes: [u8; 8] = market.market_id.to_le_bytes();
     let seeds = &[b"market", &market_id_bytes[..], &[market.bump]];
-    
+
     let signer_seeds = &[&seeds[..]];
 
     let cpi_mint_to_accounts = MintTo {
@@ -108,13 +120,24 @@ pub fn handler(ctx: Context<BuyShares>, outcome_index: u64, num_shares: u64) -> 
 
     token::mint_to(cpi_ctx, num_shares)?;
 
-    msg!("Minted {} shares to buyer's share account: {}", num_shares, buyer_share_account.key());
+    msg!(
+        "Minted {} shares to buyer's share account: {}",
+        num_shares,
+        buyer_share_account.key()
+    );
 
     // Update market funds
     market.market_maker_funds = market
         .market_maker_funds
         .checked_add(cost)
         .ok_or(CustomError::Overflow)?;
+
+    // Add reinvestment amount to market maker funds
+    market.market_maker_funds = market
+        .market_maker_funds
+        .checked_add(reinvest_amount)
+        .ok_or(CustomError::Overflow)?;
+
     market.collected_fees = market
         .collected_fees
         .checked_add(fee_recipient_amount)
@@ -161,13 +184,13 @@ pub struct BuyShares<'info> {
     )]
     pub base_token_mint: Account<'info, Mint>,
 
-       #[account(
+    #[account(
         mut,
         //constraint = outcome_mint.key() == market.outcomes[outcome_index as usize].mint,
         // address = market.outcomes[outcome_index as usize].mint
     )]
     pub outcome_mint: Account<'info, Mint>,
-    
+
     #[account(
        mut,
          //init_if_needed,
@@ -176,7 +199,6 @@ pub struct BuyShares<'info> {
          //associated_token::authority = buyer
      )]
     pub buyer_share_account: Account<'info, TokenAccount>,
-
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
